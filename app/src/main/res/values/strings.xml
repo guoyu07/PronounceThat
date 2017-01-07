@@ -1,5 +1,5 @@
 <resources>
 	<string name="app_name">Pronounce That</string>
-	<string name="word_field_hint">What to say?</string>
-	<string name="pronounce_button_text">Say</string>
+	<string name="word_field_hint">What to say in english?</string>
+	<string name="pronounce_button_text">Pronounce that!</string>
 </resources>
