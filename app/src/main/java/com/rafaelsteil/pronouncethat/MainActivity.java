@@ -1,11 +1,15 @@
 package com.rafaelsteil.pronouncethat;
 
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.speech.tts.Voice;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.transition.Fade;
 import android.util.Log;
 import android.widget.Button;
 
@@ -19,6 +23,8 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
+import static com.rafaelsteil.pronouncethat.R.id.settingsButton;
+
 public class MainActivity extends AppCompatActivity {
 	private TextToSpeech tts;
 
@@ -28,13 +34,40 @@ public class MainActivity extends AppCompatActivity {
 	@BindView(R.id.pronounceButton)
 	Button pronounceButton;
 
+	@BindView(R.id.toolbar)
+	Toolbar toolbar;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		setupWindowAnimations();
 		ButterKnife.bind(this);
+		configureToolbar();
 		initTTS();
 		textField.setShowClearButton(true);
+	}
+
+	private void setupWindowAnimations() {
+		if (Build.VERSION.SDK_INT >= 21) {
+			Fade e = new Fade();
+			e.setDuration(1000);
+			getWindow().setExitTransition(e);
+		}
+	}
+
+	private void configureToolbar() {
+		setSupportActionBar(toolbar);
+		toolbar.setTitle(R.string.app_name);
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		String hint = getResources().getString(R.string.word_field_hint);
+		String lang = PreferenceManager.getDefaultSharedPreferences(this).getString("PrefLanguage", "english").toLowerCase();
+		hint = String.format(hint, lang);
+		textField.setHint(hint);
 	}
 
 	@Override
@@ -112,6 +145,12 @@ public class MainActivity extends AppCompatActivity {
 				pronounceButton.setEnabled(true);
 			}
 		};
+	}
+
+	@OnClick(settingsButton)
+	void onSettingsButtonClicked() {
+		Intent intent = new Intent(this, SettingsActivity.class);
+		startActivity(intent);
 	}
 
 	@OnClick(R.id.pronounceButton)

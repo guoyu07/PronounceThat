@@ -1,5 +1,19 @@
 <resources>
 	<string name="app_name">Pronounce That</string>
-	<string name="word_field_hint">What to say in english?</string>
+	<string name="word_field_hint">What to say in %s?</string>
 	<string name="pronounce_button_text">Pronounce that!</string>
+	<string name="title_activity_settings">Settings</string>
+	<string name="pref_keep_word_history">Keep word history</string>
+	<string name="pref_word_history_max_size">Word history max size</string>
+	<string name="pref_word_history_max_size_summary">Store no more than %s words in the history</string>
+	<string name="pref_keep_word_history_summary">Uncheck it to clear the history</string>
+	<string name="pref_language">Language</string>
+	<string name="pref_language_summary">Pronounce in %s</string>
+	<string name="PrefVoice">PrefVoice</string>
+	<string name="pref_voice">Voice</string>
+	<string name="pref_voice_summary">use the voice %s</string>
+	<string name="PrefEngine">PrefEngine</string>
+	<string name="pref_engine">Engine</string>
+	<string name="pref_engine_summary">Use the TTS engine %s</string>
+	<string name="settings">Settings</string>
 </resources>

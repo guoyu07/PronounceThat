@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+	<!-- Keep word history -->
+	<CheckBoxPreference
+		android:key="KeepWordHistory"
+		android:defaultValue="true"
+		android:summary="@string/pref_keep_word_history_summary"
+		android:title="@string/pref_keep_word_history"/>
+
+	<!-- Max history size -->
+	<EditTextPreference
+		android:key="PrefWordHistoryMaxSize"
+		android:defaultValue="30"
+		android:title="@string/pref_word_history_max_size"
+		android:summary="@string/pref_word_history_max_size_summary"/>
+
+	<!-- Language -->
+	<ListPreference
+		android:key="PrefLanguage"
+		android:defaultValue="English"
+		android:title="@string/pref_language"
+		android:summary="@string/pref_language_summary"/>
+
+	<!-- Voice -->
+	<EditTextPreference
+		android:key="@string/PrefVoice"
+		android:defaultValue="default"
+		android:title="@string/pref_voice"
+		android:summary="@string/pref_voice_summary"/>
+
+	<!-- Engine -->
+	<EditTextPreference
+		android:key="@string/PrefEngine"
+		android:title="@string/pref_engine"
+		android:defaultValue="default"
+		android:summary="@string/pref_engine_summary"/>
+</PreferenceScreen>
