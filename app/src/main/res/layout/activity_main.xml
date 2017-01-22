@@ -27,7 +27,7 @@
 			android:layout_gravity="end"
 			android:layout_marginRight="15dp"
 			android:background="?android:selectableItemBackground"
-			android:src="@drawable/settings"/>
+			app:srcCompat="@drawable/settings"/>
 
 	</android.support.v7.widget.Toolbar>
 
