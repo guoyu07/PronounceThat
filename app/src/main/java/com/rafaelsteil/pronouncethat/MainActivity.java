@@ -84,6 +84,7 @@ public class MainActivity extends AppCompatActivity {
 		String lang = PreferenceManager.getDefaultSharedPreferences(this).getString("PrefLanguage", "english").toLowerCase();
 		hint = String.format(hint, lang);
 		textField.setHint(hint);
+		textField.setFloatingLabelText(hint);
 	}
 
 	@Override
