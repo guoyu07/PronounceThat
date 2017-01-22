@@ -64,9 +64,13 @@ public class SettingsActivity extends AppCompatActivity {
 		public void onCreate(Bundle savedInstance) {
 			super.onCreate(savedInstance);
 			addPreferencesFromResource(R.xml.preferences);
+		}
+
+		@Override
+		public void onResume() {
+			super.onResume();
 
 			final ListPreference p = (ListPreference)findPreference("PrefLanguage");
-
 			tts = new TextToSpeech(getActivity(), resultCode -> {
 				if (resultCode == TextToSpeech.SUCCESS) {
 					if (Build.VERSION.SDK_INT >= 21) {
@@ -87,11 +91,7 @@ public class SettingsActivity extends AppCompatActivity {
 					}
 				}
 			});
-		}
 
-		@Override
-		public void onResume() {
-			super.onResume();
 			prefs = getPreferenceManager().getSharedPreferences();
 			prefs.registerOnSharedPreferenceChangeListener(this);
 			restoreSummaries(getPreferenceScreen());
@@ -100,6 +100,7 @@ public class SettingsActivity extends AppCompatActivity {
 		@Override
 		public void onPause() {
 			super.onPause();
+			tts.shutdown();
 			prefs.unregisterOnSharedPreferenceChangeListener(this);
 		}
 
