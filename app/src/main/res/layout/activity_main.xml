@@ -49,18 +49,12 @@
 			android:hint="@string/word_field_hint"
 			android:layout_height="wrap_content"/>
 
-		<com.andexert.library.RippleView
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			app:rv_centered="true"
-			android:layout_gravity="center_horizontal"
-			android:layout_marginTop="15dp">
-
-			<Button android:id="@+id/pronounceButton"
-			        android:layout_width="wrap_content"
-			        android:layout_height="wrap_content"
-			        style="@style/Widget.AppCompat.Button.Colored"
-			        android:text="@string/pronounce_button_text"/>
-		</com.andexert.library.RippleView>
+		<Button android:id="@+id/pronounceButton"
+		        android:layout_width="wrap_content"
+		        android:layout_height="wrap_content"
+		        android:layout_marginTop="15dp"
+		        android:layout_gravity="center_horizontal"
+		        style="@style/Widget.AppCompat.Button.Colored"
+		        android:text="@string/pronounce_button_text"/>
 	</LinearLayout>
 </LinearLayout>
