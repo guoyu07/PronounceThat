@@ -11,7 +11,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.transition.Fade;
 import android.util.Log;
+import android.view.KeyEvent;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.rengwuxian.materialedittext.MaterialEditText;
 
@@ -45,7 +48,20 @@ public class MainActivity extends AppCompatActivity {
 		ButterKnife.bind(this);
 		configureToolbar();
 		initTTS();
+		setupTextField();
+	}
+
+	private void setupTextField() {
 		textField.setShowClearButton(true);
+		textField.setOnEditorActionListener(this::onEditorAction);
+	}
+
+	private boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
+		if (actionId == EditorInfo.IME_ACTION_GO) {
+			pronounceThat();
+			return true;
+		}
+		return false;
 	}
 
 	private void setupWindowAnimations() {
@@ -130,21 +146,25 @@ public class MainActivity extends AppCompatActivity {
 			@Override
 			public void onStart(String s) {
 				Log.d("APP", "Pronunciation started");
-				pronounceButton.setEnabled(false);
+				changePronounceButtonState(false);
 			}
 
 			@Override
 			public void onDone(String s) {
 				Log.d("APP", "Pronunciation finished");
-				pronounceButton.setEnabled(true);
+				changePronounceButtonState(true);
 			}
 
 			@Override
 			public void onError(String s) {
 				Log.w("APP", "Pronunciation error");
-				pronounceButton.setEnabled(true);
+				changePronounceButtonState(true);
 			}
 		};
+	}
+
+	private void changePronounceButtonState(boolean enabled) {
+		runOnUiThread(() -> pronounceButton.setEnabled(enabled));
 	}
 
 	@OnClick(settingsButton)
@@ -155,6 +175,10 @@ public class MainActivity extends AppCompatActivity {
 
 	@OnClick(R.id.pronounceButton)
 	void onPronounceButtonClicked() {
+		pronounceThat();
+	}
+
+	private void pronounceThat() {
 		String text = textField.getText().toString();
 
 		if (text.trim().length() == 0 || tts.isSpeaking()) {

@@ -46,6 +46,9 @@
 			android:id="@+id/textField"
 			android:layout_width="match_parent"
 			app:met_floatingLabel="normal"
+			android:imeOptions="actionGo"
+			android:inputType="textCapSentences"
+			android:maxLines="1"
 			android:hint="@string/word_field_hint"
 			android:layout_height="wrap_content"/>
 
