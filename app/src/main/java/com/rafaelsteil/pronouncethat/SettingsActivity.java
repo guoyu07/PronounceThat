@@ -13,6 +13,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.transition.Fade;
 import android.transition.TransitionInflater;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -70,6 +71,9 @@ public class SettingsActivity extends AppCompatActivity {
 		public void onResume() {
 			super.onResume();
 
+			prefs = getPreferenceManager().getSharedPreferences();
+			prefs.registerOnSharedPreferenceChangeListener(this);
+
 			final ListPreference p = (ListPreference)findPreference("PrefLanguage");
 			tts = new TextToSpeech(getActivity(), resultCode -> {
 				if (resultCode == TextToSpeech.SUCCESS) {
@@ -90,11 +94,9 @@ public class SettingsActivity extends AppCompatActivity {
 						}
 					}
 				}
-			});
 
-			prefs = getPreferenceManager().getSharedPreferences();
-			prefs.registerOnSharedPreferenceChangeListener(this);
-			restoreSummaries(getPreferenceScreen());
+				restoreSummaries(getPreferenceScreen());
+			});
 		}
 
 		@Override

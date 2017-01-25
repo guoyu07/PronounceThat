@@ -4,13 +4,10 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.speech.tts.TextToSpeech;
-import android.speech.tts.UtteranceProgressListener;
-import android.speech.tts.Voice;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.transition.Fade;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
@@ -19,8 +16,6 @@ import android.widget.TextView;
 import com.rengwuxian.materialedittext.MaterialEditText;
 
 import java.util.Locale;
-import java.util.Set;
-import java.util.UUID;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -28,8 +23,8 @@ import butterknife.OnClick;
 
 import static com.rafaelsteil.pronouncethat.R.id.settingsButton;
 
-public class MainActivity extends AppCompatActivity {
-	private TextToSpeech tts;
+public class MainActivity extends AppCompatActivity implements TTSEngineListener {
+	private TTSEngine engine;
 
 	@BindView(R.id.textField)
 	MaterialEditText textField;
@@ -80,6 +75,10 @@ public class MainActivity extends AppCompatActivity {
 	@Override
 	protected void onResume() {
 		super.onResume();
+		configureTextFieldHint();
+	}
+
+	private void configureTextFieldHint() {
 		String hint = getResources().getString(R.string.word_field_hint);
 		String lang = PreferenceManager.getDefaultSharedPreferences(this).getString("PrefLanguage", "english").toLowerCase();
 		hint = String.format(hint, lang);
@@ -89,79 +88,13 @@ public class MainActivity extends AppCompatActivity {
 
 	@Override
 	protected void onDestroy() {
-		if (tts != null) {
-			tts.stop();
-			tts.shutdown();
-		}
-
-		super.onPause();
+		engine.shutdown();
+		super.onDestroy();
 	}
 
 	private void initTTS() {
-		tts = new TextToSpeech(this, status -> {
-			if (status != TextToSpeech.ERROR) {
-				int langStatus = tts.setLanguage(Locale.US);
-
-				if (langStatus == TextToSpeech.LANG_NOT_SUPPORTED || langStatus == TextToSpeech.LANG_MISSING_DATA) {
-					// TODO
-				}
-
-				for (TextToSpeech.EngineInfo engine : tts.getEngines()) {
-					Log.d("APP", "Engine => " + engine.name);
-				}
-
-				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-					try {
-						Set<Voice> voices = tts.getVoices();
-
-						if (voices != null) {
-							for (Voice voice : voices) {
-								Log.d("APP", "Voice => " + voice.getName());
-							}
-						}
-					}
-					catch (Exception e) {
-						Log.w("APP", "Looks like we cannot retrieve available voices. Ignoring it");
-					}
-
-					try {
-						for (Locale language : tts.getAvailableLanguages()) {
-							Log.d("APP", "Language => " + language.getDisplayName());
-						}
-					}
-					catch (Exception e) {
-						Log.w("APP", "Looks like we cannot retrieve available languages. Ignoring it");
-					}
-				}
-			}
-			else {
-				Log.e("APP", "Error on TTS init. status=" + status);
-			}
-		});
-
-		tts.setOnUtteranceProgressListener(createUtteranceListener());
-	}
-
-	private UtteranceProgressListener createUtteranceListener() {
-		return new UtteranceProgressListener() {
-			@Override
-			public void onStart(String s) {
-				Log.d("APP", "Pronunciation started");
-				changePronounceButtonState(false);
-			}
-
-			@Override
-			public void onDone(String s) {
-				Log.d("APP", "Pronunciation finished");
-				changePronounceButtonState(true);
-			}
-
-			@Override
-			public void onError(String s) {
-				Log.w("APP", "Pronunciation error");
-				changePronounceButtonState(true);
-			}
-		};
+		engine = new TTSEngine(this, this);
+		engine.setLanguage(Locale.US);
 	}
 
 	private void changePronounceButtonState(boolean enabled) {
@@ -180,19 +113,71 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	private void pronounceThat() {
-		String text = textField.getText().toString();
-
-		if (text.trim().length() == 0 || tts.isSpeaking()) {
-			return;
-		}
-
-		String utteranceId = UUID.randomUUID().toString();
-
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-			tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, utteranceId);
+		if (engine.isWorking()) {
+			String text = textField.getText().toString();
+			engine.speak(text);
 		}
 		else {
-			tts.speak(text, TextToSpeech.QUEUE_FLUSH, null);
+			showTTSNotWorkingMessage();
 		}
+	}
+
+	@Override
+	public void onInitFailed() {
+		showInitFailedMessage();
+	}
+
+	private void showInitFailedMessage() {
+		new AlertDialog.Builder(this)
+				.setTitle(R.string.dialog_error_title)
+				.setMessage(R.string.tts_init_failed)
+				.setNeutralButton("OK", null)
+				.create()
+				.show();
+	}
+
+	@Override
+	public void onInitSuccess() {
+	}
+
+	@Override
+	public void onPronounceStart() {
+		changePronounceButtonState(false);
+	}
+
+	@Override
+	public void onPronounceFinish() {
+		changePronounceButtonState(true);
+	}
+
+	@Override
+	public void onLanguageDataRequired(ActionCallback<Boolean> onSuccess) {
+		new AlertDialog.Builder(this)
+				.setTitle(R.string.dialog_question_title)
+				.setMessage(R.string.language_pack_download_required)
+				.setCancelable(true)
+				.setNegativeButton(R.string.dialog_negative, null)
+				.setPositiveButton(R.string.dialog_positive, (dialog, which) -> onSuccess.result(true))
+				.create()
+				.show();
+	}
+
+	private void showTTSNotWorkingMessage() {
+		new AlertDialog.Builder(this)
+				.setTitle(R.string.dialog_error_title)
+				.setMessage(R.string.tts_not_working)
+				.setNeutralButton("OK", null)
+				.create()
+				.show();
+	}
+
+	@Override
+	public void onWillDownloadLanguage() {
+
+	}
+
+	@Override
+	public void onLanguageDownloadFinished() {
+
 	}
 }

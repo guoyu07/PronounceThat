@@ -16,4 +16,11 @@
 	<string name="pref_engine">Engine</string>
 	<string name="pref_engine_summary">Use the TTS engine %s</string>
 	<string name="settings">Settings</string>
+	<string name="dialog_error_title">Error</string>
+	<string name="tts_init_failed">Unable to init text to speech engine</string>
+	<string name="dialog_question_title">Question</string>
+	<string name="language_pack_download_required">It is necessary to download the language pack first. Continue?</string>
+	<string name="dialog_negative">No</string>
+	<string name="dialog_positive">Yes</string>
+	<string name="tts_not_working">Text to speech is not working</string>
 </resources>
