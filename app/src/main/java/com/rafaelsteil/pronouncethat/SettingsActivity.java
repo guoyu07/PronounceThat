@@ -59,7 +59,6 @@ public class SettingsActivity extends AppCompatActivity {
 	public static class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
 		private SharedPreferences prefs;
 		private Map<String, String> unformatedSummaries = new HashMap<>();
-		private TextToSpeech tts;
 
 		@Override
 		public void onCreate(Bundle savedInstance) {
@@ -75,60 +74,54 @@ public class SettingsActivity extends AppCompatActivity {
 			prefs.registerOnSharedPreferenceChangeListener(this);
 
 			final ListPreference p = (ListPreference)findPreference("PrefLanguage");
-			tts = new TextToSpeech(getActivity(), resultCode -> {
-				if (resultCode == TextToSpeech.SUCCESS) {
-					if (Build.VERSION.SDK_INT >= 21) {
-						try {
-							Set<Locale> locales = tts.getAvailableLanguages();
-							List<CharSequence> list = new ArrayList<>();
+			List<CharSequence> list = new ArrayList<>();
 
-							for (Locale l : locales) {
-								list.add(l.getDisplayName());
-							}
+			for (Locale l : Locale.getAvailableLocales()) {
+				list.add(l.getDisplayName());
+			}
 
-							p.setEntries(list.toArray(new CharSequence[0]));
-							p.setEntryValues(list.toArray(new CharSequence[0]));
-						} catch (Exception e) {
-							p.setEntries(new CharSequence[] {"English"});
-							p.setEntryValues(new CharSequence[] {"English"});
-						}
-					}
-				}
+			p.setEntries(list.toArray(new CharSequence[0]));
+			p.setEntryValues(list.toArray(new CharSequence[0]));
 
-				restoreSummaries(getPreferenceScreen());
-			});
+			restoreSummaries(getPreferenceScreen());
 		}
 
 		@Override
 		public void onPause() {
 			super.onPause();
-			tts.shutdown();
 			prefs.unregisterOnSharedPreferenceChangeListener(this);
 		}
 
 		private void restoreSummaries(Preference p) {
 			if (p instanceof PreferenceGroup) {
-				PreferenceGroup pg = (PreferenceGroup)p;
-				int total = pg.getPreferenceCount();
-
-				for (int i = 0; i < total; i++) {
-					restoreSummaries(pg.getPreference(i));
-				}
+				iterateOverPreferenceGroup((PreferenceGroup) p);
 			}
 			else if (p instanceof EditTextPreference) {
-				String text = ((EditTextPreference)p).getText();
-				String summary;
-
-				if (!unformatedSummaries.containsKey(p.getKey())) {
-					summary = p.getSummary().toString();
-					unformatedSummaries.put(p.getKey(), summary);
-				}
-				else {
-					summary = unformatedSummaries.get(p.getKey());
-				}
-
-				p.setSummary(String.format(summary, text));
+				setEditPreferenceSummary(p);
 			}
+		}
+
+		private void iterateOverPreferenceGroup(PreferenceGroup pg) {
+			int total = pg.getPreferenceCount();
+
+			for (int i = 0; i < total; i++) {
+				restoreSummaries(pg.getPreference(i));
+			}
+		}
+
+		private void setEditPreferenceSummary(Preference p) {
+			String text = ((EditTextPreference)p).getText();
+			String summary;
+
+			if (!unformatedSummaries.containsKey(p.getKey())) {
+				summary = p.getSummary().toString();
+				unformatedSummaries.put(p.getKey(), summary);
+			}
+			else {
+				summary = unformatedSummaries.get(p.getKey());
+			}
+
+			p.setSummary(String.format(summary, text));
 		}
 
 		@Override

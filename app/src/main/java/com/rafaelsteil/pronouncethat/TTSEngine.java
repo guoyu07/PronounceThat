@@ -18,6 +18,7 @@ public class TTSEngine {
 	private final TTSEngineListener listener;
 	private Locale locale;
 	private boolean isWorking;
+	private static TTSEngine instance;
 
 	public TTSEngine(Context context, TTSEngineListener listener) {
 		this.context = context;
@@ -27,6 +28,10 @@ public class TTSEngine {
 
 	public void setLanguage(Locale locale) {
 		this.locale = locale;
+	}
+
+	public static TTSEngine instance() {
+		return instance;
 	}
 
 	/**
