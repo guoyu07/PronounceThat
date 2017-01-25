@@ -59,11 +59,21 @@ public class SettingsActivity extends AppCompatActivity {
 	public static class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
 		private SharedPreferences prefs;
 		private Map<String, String> unformatedSummaries = new HashMap<>();
+		private String originalLanguage;
 
 		@Override
 		public void onCreate(Bundle savedInstance) {
 			super.onCreate(savedInstance);
 			addPreferencesFromResource(R.xml.preferences);
+			saveOriginalLanguage();
+		}
+
+		private void saveOriginalLanguage() {
+			originalLanguage = getPrefLanguage().getValue();
+
+			if (originalLanguage == null || "English".equals(originalLanguage)) {
+				originalLanguage = Locale.US.getDisplayLanguage();
+			}
 		}
 
 		@Override
@@ -73,17 +83,21 @@ public class SettingsActivity extends AppCompatActivity {
 			prefs = getPreferenceManager().getSharedPreferences();
 			prefs.registerOnSharedPreferenceChangeListener(this);
 
-			final ListPreference p = (ListPreference)findPreference("PrefLanguage");
 			List<CharSequence> list = new ArrayList<>();
 
 			for (Locale l : Locale.getAvailableLocales()) {
 				list.add(l.getDisplayName());
 			}
 
+			ListPreference p = getPrefLanguage();
 			p.setEntries(list.toArray(new CharSequence[0]));
 			p.setEntryValues(list.toArray(new CharSequence[0]));
 
 			restoreSummaries(getPreferenceScreen());
+		}
+
+		private ListPreference getPrefLanguage() {
+			return (ListPreference)findPreference("PrefLanguage");
 		}
 
 		@Override
@@ -127,6 +141,23 @@ public class SettingsActivity extends AppCompatActivity {
 		@Override
 		public void onSharedPreferenceChanged(SharedPreferences preferences, String key) {
 			restoreSummaries(getPreferenceScreen());
+			checkSelectedLanguageAvailability();
+		}
+
+		private void checkSelectedLanguageAvailability() {
+			String selectedLang = getPrefLanguage().getValue();
+			TTSEngine engine = TTSEngine.instance();
+
+			if (!(selectedLang.equals(originalLanguage)) && !engine.isLanguageAvailable(selectedLang)) {
+				Dialogs.langNotAvailable(getActivity(), result -> {
+					if (result) {
+						engine.startTTSDataInstall(getActivity());
+					}
+					else {
+						getPrefLanguage().setValue(originalLanguage);
+					}
+				});
+			}
 		}
 	}
 }

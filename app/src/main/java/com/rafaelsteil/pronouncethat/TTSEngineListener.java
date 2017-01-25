@@ -1,7 +1,5 @@
 package com.rafaelsteil.pronouncethat;
 
-import android.speech.tts.TextToSpeech;
-
 /**
  * Listener for all tts operations
  * */
@@ -29,10 +27,8 @@ public interface TTSEngineListener {
 
 	/**
 	 * Called when a language pack is missing and requires download.
-	 * The callback should inform the user's decision
-	 * @param onSuccess if the user has agreed to download the language pack
 	 */
-	void onLanguageDataRequired(ActionCallback<Boolean> onSuccess);
+	void onLanguageDataRequired();
 
 	/**
 	 * Called just before language download will start

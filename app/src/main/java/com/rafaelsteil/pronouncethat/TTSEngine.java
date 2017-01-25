@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.os.Build;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import java.util.Locale;
 import java.util.UUID;
@@ -14,24 +16,62 @@ import java.util.UUID;
  */
 public class TTSEngine {
 	private TextToSpeech tts;
-	private Context context;
 	private final TTSEngineListener listener;
-	private Locale locale;
 	private boolean isWorking;
 	private static TTSEngine instance;
 
 	public TTSEngine(Context context, TTSEngineListener listener) {
-		this.context = context;
 		this.listener = listener;
 		tts = new TextToSpeech(context, this::onTtsInitListener);
-	}
-
-	public void setLanguage(Locale locale) {
-		this.locale = locale;
+		instance = this;
 	}
 
 	public static TTSEngine instance() {
 		return instance;
+	}
+
+	/**
+	 * Changes the current language. It will check if the necessary data
+	 * is available, and call the proper callbacks depending on the result
+	 */
+	public void setLanguage(Locale locale) {
+		if (locale == null || !isWorking()) {
+			return;
+		}
+
+		int langStatus = tts.isLanguageAvailable(locale);
+
+		if (isLangAvailableSuccess(langStatus)) {
+			tts.setLanguage(locale);
+			isWorking = true;
+		}
+		else if (langStatus == TextToSpeech.LANG_MISSING_DATA) {
+			listener.onLanguageDataRequired();
+			isWorking = false;
+		}
+		else if (langStatus == TextToSpeech.LANG_NOT_SUPPORTED) {
+			listener.onInitFailed();
+			isWorking = false;
+		}
+	}
+
+	/**
+	 * Sets the language based on its name
+	 * @param displayName The language's name, the same value of {@link Locale#getDisplayName()}
+	 */
+	public void setLanguage(String displayName) {
+		setLanguage(findLocaleByDisplayName(displayName));
+	}
+
+	@Nullable
+	private Locale findLocaleByDisplayName(String displayName) {
+		for (Locale locale : Locale.getAvailableLocales()) {
+			if (locale.getDisplayName().equals(displayName)) {
+				return locale;
+			}
+		}
+
+		return null;
 	}
 
 	/**
@@ -71,7 +111,9 @@ public class TTSEngine {
 
 	private void onTtsInitListener(int status) {
 		if (status == TextToSpeech.SUCCESS) {
-			configureTtsSettings();
+			isWorking = true;
+			tts.setOnUtteranceProgressListener(createUtteranceListener());
+			listener.onInitSuccess();
 		}
 		else {
 			listener.onInitFailed();
@@ -97,29 +139,7 @@ public class TTSEngine {
 		};
 	}
 
-	private void configureTtsSettings() {
-		int langStatus = tts.isLanguageAvailable(locale);
-
-		if (isLangAvailableSuccess(langStatus)) {
-			tts.setLanguage(locale);
-			tts.setOnUtteranceProgressListener(createUtteranceListener());
-			isWorking = true;
-			listener.onInitSuccess();
-		}
-		else if (langStatus == TextToSpeech.LANG_MISSING_DATA) {
-			listener.onLanguageDataRequired(this::startLanguageDataDownload);
-		}
-		else if (langStatus == TextToSpeech.LANG_NOT_SUPPORTED) {
-			isWorking = false;
-			listener.onInitFailed();
-		}
-	}
-
-	private void startLanguageDataDownload(Boolean shouldDownload) {
-		if (!shouldDownload) {
-			return;
-		}
-
+	public void startTTSDataInstall(Context context) {
 		Intent intent = new Intent();
 		intent.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
 		context.startActivity(intent);
@@ -133,5 +153,15 @@ public class TTSEngine {
 		return status == TextToSpeech.LANG_AVAILABLE
 				|| status == TextToSpeech.LANG_COUNTRY_AVAILABLE
 				|| status == TextToSpeech.LANG_COUNTRY_VAR_AVAILABLE;
+	}
+
+	/**
+	 * Checks if a given language is installed
+	 * @param displayName the language name, as returned by {@link Locale#getDisplayName()}s
+	 * @return true if the language is installed in the selected tts engine
+	 */
+	public boolean isLanguageAvailable(String displayName) {
+		Locale locale = findLocaleByDisplayName(displayName);
+		return locale != null && isLangAvailableSuccess(tts.isLanguageAvailable(locale));
 	}
 }
